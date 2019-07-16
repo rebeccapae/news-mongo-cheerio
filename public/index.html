@@ -7,11 +7,26 @@
   </head>
 
   <body>
+    <nav>
+        <button id = "home-button">Home</button>
+        <button id = "savedPage-button">Saved Articles</button>
+    </nav>
+
     <div id="wrapper">
-      <h1>Note Scraper</h1>
-      <h2><i>If you can do this...the homework should be no problem.</i></h2>
-      <div id="articles"></div>
-      <div id="notes"></div>
+      <h1>Article Scraper</h1>
+      <h2><i>Finance News - stay up to date!</i></h2>
+
+      <button id = "scrapeFunction">Scrape Finance Articles!</button>
+
+      <div id="articles">
+        <h2>Articles</h2>
+      </div>
+      <div id="saved">
+          <h2>Saved Articles</h2>
+        </div>
+      <div id="notes">
+        <h2>Notes</h2>
+      </div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="app.js"></script>

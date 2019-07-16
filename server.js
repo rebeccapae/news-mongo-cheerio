@@ -48,6 +48,7 @@ app.get("/scrape", function(req, res) {
             var entireLink = "https://finance.yahoo.com" + $(this).children("a").attr("href");
             result.link = entireLink;
             result.summary = $(this).siblings("p").text();
+            result.saved = false;
     
             db.Article.find({"title": result.title}, function(error, found) {
                 if(found.length !== 0){
@@ -74,49 +75,61 @@ app.get("/scrape", function(req, res) {
 
 //Shows all articles in the db
 app.get("/articles", function(req, res) {
-    db.Article.find({}, function(err, found) {
-        if(err){
-            console.log(err)
-        }
-        else(
-            res.json(found)
-        )
+    db.Article.find({})
+    .then(function(dbArticle) {
+      res.json(dbArticle);
+    })
+    .catch(function(err) {
+      res.json(err);
     });
 });
 
-//Find specific Article by id
-app.get("/articles/:id", function(req, res) {
-    db.Article.findOne({
-    _id: mongojs.ObjectId(req.params.id)
-    }, function(error, found) {
-    if(error){
-        console.log(error);
-        res.send(error)
-    }
-    else{
-        console.log(found);
-        res.send(found)
-    }
-    })
+// Show Saved Articles
+app.get("/articles/saved", function(req, res) {
+    db.Article.find({ saved: true }) 
+    .then(function(dbArticleSaved) {
+        res.json(dbArticleSaved);
+      })
+      .catch(function(err) {
+        res.json(err);
+      });
 });
 
-//   // Route for grabbing a specific Article by id, populate it with it's note
-//   app.get("/articles/:id", function(req, res) {
-//     // TODO
-//     // ====
-//     // Finish the route so it finds one article using the req.params.id,
-//     // and run the populate method with "note",
-//     // then responds with the article with the note included
-//   });
-  
-//   // Route for saving/updating an Article's associated Note
-//   app.post("/articles/:id", function(req, res) {
-//     // TODO
-//     // ====
-//     // save the new note that gets posted to the Notes collection
-//     // then find an article from the req.params.id
-//     // and update it's "note" property with the _id of the new note
-//   });
+// Save articles chosen by user
+app.post("/articles/:id/save", function(req, res) {
+    db.Article.findOneAndUpdate({_id: req.params.id }, { saved: true})
+    .then(function() {
+        console.log("saved article to db")
+    })
+})
+
+//Find specific Article by id and populate with note
+app.get("/articles/:id/notes", function(req, res) {
+    db.Article.findOne({_id: req.params.id })
+    .populate("note")
+    .then(function(dbArticle) {
+        res.json(dbArticle);
+    })
+    .catch(function(err) {
+        res.json(err)
+    });
+});
+
+
+
+// Saving/update Article's note
+app.post("/articles/:id/notes", function(req, res) {
+    db.Note.create(req.body)
+    .then(function(dbNote){
+        return db.Article.findOneAndUpdate({ _id: req.params.id }, { note: dbNote._id}, { new: true });
+    })
+    .then(function(dbArticle) {
+        res.json(dbArticle);
+    })
+    .catch(function(err) {
+        res.json(err)
+    });
+});
   
   // Start the server
   app.listen(PORT, function() {
