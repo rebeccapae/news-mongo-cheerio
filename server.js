@@ -101,20 +101,58 @@ app.post("/articles/:id/save", function(req, res) {
     .then(function() {
         console.log("saved article to db")
     })
-})
+});
+
+//Delete Article
+app.post("/articles/:id/delete", function(req, res) {
+    db.Article.findOneAndUpdate({_id: req.params.id}, { saved: false})
+    .then(function() {
+    console.log("article unsaved and changed to false in db")
+    })
+});
 
 //Find specific Article by id and populate with note
 app.get("/articles/:id/notes", function(req, res) {
     db.Article.findOne({_id: req.params.id })
-    .populate("note")
     .then(function(dbArticle) {
-        res.json(dbArticle);
+        res.send(dbArticle);
     })
     .catch(function(err) {
-        res.json(err)
+        res.send(err)
     });
 });
 
+//Save the article to db
+app.post("/articles/:id/notes/save", function(req, res) {
+    db.Article.findOneAndUpdate({_id: req.params.id }, { note: req.body.note})
+    .then(function(error, edited){
+        console.log("note saved to db")
+        if (error) {
+            console.log(error);
+            res.send(error);
+          }
+          else {
+            console.log(edited);
+            res.send(edited);
+          }
+    })
+})
+
+//delete note from db
+app.post("/articles/:id/deletenote", function(req, res) {
+    db.Article.update({_id: req.params.id }, {$unset:{ note: ""} })
+    .then(function(error, edited){
+        console.log("note deleted from db")
+        if (error) {
+            console.log(error);
+            res.send(error);
+          }
+          else {
+            console.log(edited);
+            res.send(edited);
+          }
+    })
+})
 
 
 // Saving/update Article's note

@@ -44,87 +44,70 @@ $("#savedPage-button").on("click", function() {
         $("#saved").empty()
         $("#articles").hide()
         $("#saved").show()
+        $("#saved").html("<h2>Saved Articles</h2>")
         for (var i = 0; i < data.length; i++) {
-          $("#saved").append("<p data-id='" + data[i]._id + "'>" + "<b>" + "Title: " + "</b>" + data[i].title + "<br />" + "<b>" + "Link: " + "</b>" + "<br />" + data[i].link + "<br />" + "<b>" + "Summary: " + "</b>" + data[i].summary + "</p>" +  "<button button-id='" + data[i]._id + "' class=notes-button>" + 'Add a Note' + "</button>");
+          $("#saved").append("<p data-id='" + data[i]._id + "'>" + "<b>" + "Title: " + "</b>" + data[i].title + "<br />" + "<b>" + "Link: " + "</b>" + "<br />" + data[i].link + "<br />" + "<b>" + "Summary: " + "</b>" + data[i].summary + "<button button-id='" + data[i]._id + "' class=notes-button>" + 'Add a Note' + "</button>" +  "<button button-id='" + data[i]._id + "' class=article-delete>" + 'Delete Article' + "</button>" + "</p>");
+        }
+        $("#notes").empty();
+        $("#notes").html("<h2>Notes</h2>")
+        for (var i = 0; i < data.length; i++) {
+            if(data[i].note === undefined) {
+                console.log("no note to display")
+            }
+            else {
+                $("#notes").append("<p data-id='" + data[i]._id + "'>" + "<b>" + "Title: " + "</b>" + data[i].title + "<br />" + "<b>" + "Note: " + "</b>" + data[i].note + "<button button-id='" + data[i]._id + "' class=delete-note>" + 'Delete Note' + "</button>" + "</p>");
+            }
         }
     });
 })
 
+    //Delete article
+    $(document).on("click", ".article-delete", function() {
+        var saveArticleID = $(this).attr("button-id")
+        $(this).parent().remove();
+        
+        $.ajax({
+            method: "POST",
+            url: "/articles/" + saveArticleID + "/delete",
+            data: {
+                id: saveArticleID
+            }
+        })
+        .then(function(){
+            console.log("done")
+        }) 
+    });  
+
 // Notes Functionality
 
-  //Form when notes button clicked and Saving the Note
-  $(document).on("click", ".notes-button", function() {
+$(document).on("click", ".notes-button", function() {
     var saveArticleID = $(this).attr("button-id")
     var notesInput = prompt("Add a note for this article");
-    console.log(notesInput)
 
     $.ajax({
         method: "POST",
-        url: "/articles/" + saveArticleID + "/notes",
+        url: "/articles/" + saveArticleID + "/notes/save",
         data: {
-            title: saveArticleID,
-            body: notesInput
+            note: notesInput
+        },
+        success: function(data){
+            $("#notes").append("<p data-id='" + saveArticleID + "'>" +"<b>" + "Title: "+ "</b>" + data.title + "<br />" +"<b>" + "Note: "+ "</b>" + notesInput + "<br />" +  "<button button-id='" + saveArticleID + "' class=delete-note>" + 'Delete Note' + "</button>" + "</p>" )
         }
     })
-    .then(function() {
-        console.log("note saved")
-    })
-})
+});
 
-//Viewing Note
-$(document).on("click", ".notes-view", function() {
+//Delete note
+$(document).on("click", ".delete-note", function() {
     var saveArticleID = $(this).attr("button-id")
-    $.ajax({
-        method: "GET",
-        url: "/notes"
-    })
-    .then(function() {
-        $.getJSON("/notes", function(data) {
-            for (var i = 0; i < data.length; i++) {
-              $("#articles").append("<p data-id='" + data[i]._id + "'>" +"<b>" + "Title: "+ "</b>" + data[i].title + "<br />" + "<b>" + "Link: " + "</b>" + data[i].link + "<br />" + "<b>" + "Summary: " + "</b>" + data[i].summary + "<br />" + "</p>" +  "<button button-id='" + data[i]._id + "' class=save-button>" + 'Save This Article' + "</button>");
-            }
-        });
-    })
-})
-
-$(document).on("click", "p", function() {
-    $("#notes").empty();
-    var thisID = $(this).attr("data-id");
-
-    $.ajax({
-        method: "GET",
-        url: "/articles/" + thisID
-    })
-    .then(function(data){
-        $("#notes").append("<h2>" + data.title + "</h2>")
-      $("#notes").append("<input id='titleinput' name='title' >");
-      $("#notes").append("<textarea id='bodyinput' name='body'></textarea>");
-      $("#notes").append("<button data-id='" + data._id + "' id='savenote'>Save Note</button>");
-
-      //If note already there
-      if (data.note) {
-          $("#titleinput").val(data.note.title);
-          $("#bodyinput").val(data.note.body);
-      }
-    })
-});
-
-
-//Saving Note
-$(document).on("click", "#savenote", function(){
-    var thisID = $(this).attri("data-id");
-
+    $(this).parent().remove()
     $.ajax({
         method: "POST",
-        url: "/articles/" + thisID,
+        url: "/articles/" + saveArticleID + "/deletenote",
         data: {
-            title: $("#titleinput").val(),
-            body: $("#bodyinput").val()
+            note: "none"
+        },
+        success: function(){
+            console.log("removed note")
         }
     })
-    .then(function(data) {
-        $("#notes").empty()
-    })
-    $("#titleinput").val("");
-    $("#bodyinput").val("");
-});
+})
